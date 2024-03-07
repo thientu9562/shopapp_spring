@@ -1,7 +1,8 @@
-package com.example.shopapp.controller;
+package com.example.shopapp.controllers;
 
-import com.example.shopapp.DTO.UserDTO;
-import com.example.shopapp.DTO.UserLoginDTO;
+import com.example.shopapp.dtos.UserDTO;
+import com.example.shopapp.dtos.UserLoginDTO;
+import com.example.shopapp.services.users.UserService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +19,10 @@ import java.util.List;
 @RequestMapping("${api.prefix}/users")
 public class UserController {
 
+     private final UserService userService;
+     public UserController(UserService userService) {
+         this.userService = userService;
+     }
     @PostMapping("/register")
     public ResponseEntity<?> createUser(@Valid @RequestBody UserDTO userDTO, BindingResult result) {
         try {
@@ -30,6 +35,7 @@ public class UserController {
             if(!userDTO.getPassword().equals(userDTO.getRetypePassword())) {
                  return ResponseEntity.badRequest().body("Password does not match");
             }
+            userService.createUser(userDTO);
             return ResponseEntity.ok("Register successfully!");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
@@ -38,6 +44,7 @@ public class UserController {
 
     @PostMapping("/login")
     public ResponseEntity<String> login(@Valid @RequestBody UserLoginDTO userLoginDTO) {
-        return ResponseEntity.ok("some token");
+         String login = userService.login(userLoginDTO.getPhoneNumber(), userLoginDTO.getPassword());
+        return ResponseEntity.ok(login);
     }
 }

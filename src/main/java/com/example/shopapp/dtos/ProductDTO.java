@@ -1,4 +1,4 @@
-package com.example.shopapp.DTO;
+package com.example.shopapp.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Max;
@@ -26,7 +26,7 @@ public class ProductDTO {
     private String description;
 
     @JsonProperty("category_id")
-    private String categoryId;
+    private Long categoryId;
 
     private List<MultipartFile> files;
 }

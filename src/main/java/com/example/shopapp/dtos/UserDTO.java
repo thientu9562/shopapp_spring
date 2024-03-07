@@ -1,9 +1,12 @@
-package com.example.shopapp.DTO;
+package com.example.shopapp.dtos;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+
+import java.util.Date;
+
 
 @Data
 @Builder
@@ -28,13 +31,13 @@ public class UserDTO {
     private String retypePassword;
 
     @JsonProperty("date_of_birth")
-    private String dateOfBirth;
+    private Date dateOfBirth;
 
     @JsonProperty("facebook_account_id")
-    private String facebookAccountId;
+    private int facebookAccountId;
 
     @JsonProperty("google_account_id")
-    private String googleAccountId;
+    private int googleAccountId;
 
     @NotNull(message = "Role ID is required!")
     @JsonProperty("role_id")
