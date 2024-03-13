@@ -2,11 +2,13 @@ package com.example.shopapp.controllers;
 
 import com.example.shopapp.dtos.ProductDTO;
 import com.example.shopapp.dtos.ProductImageDTO;
+import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.models.Product;
 import com.example.shopapp.models.ProductImage;
 import com.example.shopapp.responses.ProductListresponse;
 import com.example.shopapp.responses.ProductResponse;
 import com.example.shopapp.services.products.ProductService;
+import com.github.javafaker.Faker;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -66,8 +68,13 @@ public class ProductController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<String> getProduct(@PathVariable("id") Long id) {
-        return ResponseEntity.ok("Get product id:" + id);
+    public ResponseEntity<?> getProduct(@PathVariable("id") Long id) {
+        try {
+            Product product = productService.getProductById(id);
+            return ResponseEntity.ok(ProductResponse.formProduct(product));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
 
@@ -176,12 +183,52 @@ public class ProductController {
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<String> updateProduct(@PathVariable("id") String productId) {
-        return ResponseEntity.ok("this is updateCategory " + productId);
+    public ResponseEntity<?> updateProduct(
+            @PathVariable("id") Long productId,
+            @RequestBody ProductDTO productDTO
+            ) {
+        try {
+            Product updateProduct = productService.updateProduct(productId, productDTO);
+            return ResponseEntity.ok(updateProduct);
+        } catch (Exception e) {
+           return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deleteProduct(@PathVariable Long id) {
-        return ResponseEntity.status(HttpStatus.OK).body("Product deleted with id:" + id);
+        try {
+           productService.deleteProduct(id);
+            return ResponseEntity.ok("Delete successfully for Id: " + id);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+//    @PostMapping("/generateFakerProducts")
+    public ResponseEntity<String> generateFakeProducts() {
+        Faker faker = new Faker();
+
+        for (int i = 0; i < 100; i++) {
+
+            // Auto gen name
+            String productName = faker.commerce().productName();
+            if(productService.existsByName(productName)) {
+                continue;
+            }
+            ProductDTO productDTO = ProductDTO.builder()
+                    .name(productName)
+                    .price((float) faker.number().numberBetween(10, 100000))
+                    .description(faker.lorem().sentence())
+                    .thumbnail("")
+                    .categoryId((long) faker.number().numberBetween(2,5))
+                    .build();
+            try {
+                productService.createProduct(productDTO);
+            } catch (DataNotFoundException e) {
+                return ResponseEntity.badRequest().body(e.getMessage());
+            }
+        }
+        return ResponseEntity.ok("fake product created successfully");
     }
 }

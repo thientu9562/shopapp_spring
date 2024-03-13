@@ -1,41 +1,39 @@
-package com.example.shopapp.dtos;
+package com.example.shopapp.responses;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 import lombok.*;
 
+import java.time.LocalDateTime;
 import java.util.Date;
 
-@Data
-@Builder
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class OrderDTO {
+@Builder
+public class OrderResponse  extends BaseResponse{
+    private Long id;
 
     @JsonProperty("user_id")
-    @Min(value = 1, message = "User ID must be > 0")
     private Long userId;
 
     @JsonProperty("fullname")
     private String fullName;
 
-    private String email;
-
     @JsonProperty("phone_number")
-    @NotBlank(message = "Phone number is required")
-    @Size(min = 10, message = "Phone number must be at least 10 characters")
     private String phoneNumber;
 
     private String address;
 
     private String note;
 
+    @JsonProperty("order_date")
+    private LocalDateTime orderDate;
+
+    private String status;
+
     @JsonProperty("total_money")
-    @Min(value = 0, message = "Total money must be > 0")
     private Float totalMoney;
 
     @JsonProperty("shipping_method")
@@ -44,14 +42,14 @@ public class OrderDTO {
     @JsonProperty("shipping_address")
     private String shippingAddress;
 
-    @JsonProperty("payment_method")
-    private String paymentMethod;
-
     @JsonProperty("shipping_date")
     private Date shippingDate;
 
     @JsonProperty("tracking_number")
     private String trackingNumber;
+
+    @JsonProperty("payment_method")
+    private String paymentMethod;
 
     @JsonProperty("active")
     private boolean active;

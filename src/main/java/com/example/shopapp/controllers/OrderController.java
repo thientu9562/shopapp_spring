@@ -1,6 +1,9 @@
 package com.example.shopapp.controllers;
 
 import com.example.shopapp.dtos.OrderDTO;
+import com.example.shopapp.responses.OrderResponse;
+import com.example.shopapp.services.orders.IOrderService;
+import com.example.shopapp.services.orders.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,8 +16,15 @@ import java.util.List;
 @RestController
 @RequestMapping("${api.prefix}/orders")
 public class OrderController {
+
+    private final IOrderService orderService;
+
+    public OrderController(IOrderService orderService) {
+        this.orderService = orderService;
+    }
+
     @PostMapping("")
-    public ResponseEntity<?> createOrder(@Valid @RequestBody OrderDTO orderDTo, BindingResult result) {
+    public ResponseEntity<?> createOrder(@Valid @RequestBody OrderDTO orderDTO, BindingResult result) {
         try {
             if(result.hasErrors()){
                 List<String> errorMessage = result.getFieldErrors()
@@ -23,8 +33,11 @@ public class OrderController {
                 return ResponseEntity.badRequest().body(errorMessage);
             }
 
-            return ResponseEntity.ok("create order successfully!");
+            // Create order
+            OrderResponse orderResponse = orderService.createOrder(orderDTO);
+            return ResponseEntity.ok(orderResponse);
         } catch (Exception e) {
+
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }

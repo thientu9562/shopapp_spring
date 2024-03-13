@@ -51,24 +51,15 @@ public class ProductService implements IProductService{
     @Override
     public Product getProductById(long productId) throws Exception {
         return productRepository.findById(productId)
-                .orElseThrow(()-> new DataNotFoundException("Can't find product with id: " + productId));
+                .orElseThrow(()-> new DataNotFoundException(
+                        "Can't find product with id: " + productId));
     }
 
     @Override
     public Page<ProductResponse> getAllProducts(PageRequest pageRequest) {
         // Get list product
-        return productRepository.findAll(pageRequest).map(product -> {
-            ProductResponse productResponse = ProductResponse.builder()
-                    .name(product.getName())
-                    .price(product.getPrice())
-                    .thumbnail(product.getThumbnail())
-                    .description(product.getDescription())
-                    .categoryId(product.getCategory().getId())
-                    .build();
-            productResponse.setCreateAt(product.getCreateAt());
-            productResponse.setUpdateAt(product.getUpdateAt());
-            return productResponse;
-        });
+        return productRepository.findAll(pageRequest)
+                .map(product -> ProductResponse.formProduct(product));
     }
 
     @Override
