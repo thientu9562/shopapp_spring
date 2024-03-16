@@ -35,10 +35,10 @@ public class User extends BaseEntity{
     private Date dateOfBirth;
 
     @Column(name = "facebook_account_id")
-    private int facebookAccountId;
+    private Integer facebookAccountId;
 
     @Column(name = "google_account_id")
-    private int googleAccountId;
+    private Integer googleAccountId;
 
     @ManyToOne
     @JoinColumn(name = "role_id")

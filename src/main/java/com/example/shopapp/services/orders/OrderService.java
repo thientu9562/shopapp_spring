@@ -11,9 +11,10 @@ import com.example.shopapp.responses.OrderResponse;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.Date;
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class OrderService implements IOrderService{
@@ -52,37 +53,85 @@ public class OrderService implements IOrderService{
         order.setStatus(OrderStatus.PENDING);
 
         // shipping_date > now
-        Date shippingDate = orderDTO.getShippingDate() == null ?
-                new Date() : orderDTO.getShippingDate();
+        LocalDate shippingDate = orderDTO.getShippingDate() == null ?
+                LocalDate.now() : orderDTO.getShippingDate();
 
-        if(shippingDate.before(new Date())) {
+        // check shipDate must be least today
+        if(shippingDate.isBefore(LocalDate.now())) {
             throw new DataNotFoundException("Date must be at least today!");
         }
 
         order.setActive(true);
-
+        order.setShippingDate(shippingDate);
         // save to DB
         orderRepository.save(order);
         return modelMapper.map(order, OrderResponse.class);
     }
 
     @Override
-    public OrderResponse getOrder(Long id) {
-        return null;
+    public OrderResponse getOrder(Long orderId) throws Exception {
+
+        // Get information of order
+        Order order = orderRepository.findById(orderId).orElseThrow(
+                () -> new DataNotFoundException("Order does not find with id: " + orderId)
+        );
+        return modelMapper.map(order, OrderResponse.class);
     }
 
     @Override
-    public OrderResponse updateOrder(Long id, OrderDTO orderDTO) {
-        return null;
+    public OrderResponse updateOrder(Long orderId, OrderDTO orderDTO)
+            throws DataNotFoundException {
+
+        // Check order is exist DB
+        Order existingOrder = orderRepository.findById(orderId).orElseThrow(
+                () -> new DataNotFoundException("Cannot find order with id: " + orderId)
+        );
+
+        // Check user is existing in DB
+        User existingUser = userRepository.findById(orderDTO.getUserId()).orElseThrow(
+                () -> new DataNotFoundException("Cannot find user with id: "
+                        + orderDTO.getUserId())
+        );
+
+        // Convert DTO to Model
+        modelMapper.typeMap(OrderDTO.class, Order.class)
+                .addMappings(mapper -> mapper.skip(Order::setId));
+
+        // Mapping
+        modelMapper.map(orderDTO, existingOrder);
+
+        // Set param
+        existingOrder.setUser(existingUser);
+
+        orderRepository.save(existingOrder);
+
+        return modelMapper.map(existingOrder, OrderResponse.class);
     }
 
     @Override
-    public void deleteOrder(Long id) {
+    public void deleteOrder(Long id) throws DataNotFoundException {
 
+        // Find order in DB
+        Order order = orderRepository.findById(id).orElseThrow(
+                () -> new DataNotFoundException("Cannot find order with id: " + id)
+        );
+
+        // soft-delete
+        if(order != null) {
+            order.setActive(false);
+            orderRepository.save(order);
+        }
     }
 
     @Override
-    public List<OrderResponse> getAllOrders(Long userId) {
-        return null;
+    public List<OrderResponse> findByUserId(Long userId) {
+
+        // Get list order by userId
+        List<Order> orderList = orderRepository.findByUserId(userId);
+
+        // Mapper for List order
+        return orderList.stream()
+                .map(order -> modelMapper.map(order, OrderResponse.class))
+                .collect(Collectors.toList());
     }
 }

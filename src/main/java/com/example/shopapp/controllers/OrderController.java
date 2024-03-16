@@ -1,9 +1,9 @@
 package com.example.shopapp.controllers;
 
 import com.example.shopapp.dtos.OrderDTO;
+import com.example.shopapp.exceptions.DataNotFoundException;
 import com.example.shopapp.responses.OrderResponse;
 import com.example.shopapp.services.orders.IOrderService;
-import com.example.shopapp.services.orders.OrderService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -42,14 +42,30 @@ public class OrderController {
         }
     }
 
-    @GetMapping("/{user_id}")
-    // GET http://localhost:8081/api/v1/orders/2
-    public ResponseEntity<String> getOrders(@PathVariable("user_id") Long useriD){
+    @GetMapping("/user/{user_id}")
+    // GET http://localhost:8081/api/v1/orders/user/2
+    public ResponseEntity<?> getOrders(@PathVariable("user_id") Long useriD){
          try {
-             return ResponseEntity.ok("Lấy ra danh sách order");
+
+             // Get list information order by userId
+             List<OrderResponse> orderResponseList = orderService.findByUserId(useriD);
+             return ResponseEntity.ok(orderResponseList);
          } catch (Exception e) {
              return ResponseEntity.badRequest().body(e.getMessage());
          }
+    }
+
+    @GetMapping("/{id}")
+    // GET http://localhost:8081/api/v1/orders/2
+    public ResponseEntity<?> getOrder(@PathVariable("id") Long orderId){
+        try {
+
+            // Get information order by id
+            OrderResponse orderResponse = orderService.getOrder(orderId);
+            return ResponseEntity.ok(orderResponse);
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
     }
 
     @PutMapping("/{id}")
@@ -57,22 +73,28 @@ public class OrderController {
     public ResponseEntity<?> updateOrder(@Valid @PathVariable("id") Long orderId,
                                                 @Valid @RequestBody OrderDTO orderDTO, BindingResult result) {
         try {
+
+            // Display error validate
             if(result.hasErrors()){
                 List<String> errorMessage = result.getFieldErrors()
                         .stream().map(FieldError::getDefaultMessage)
                         .toList();
                 return ResponseEntity.badRequest().body(errorMessage);
             }
-            return ResponseEntity.ok("Cập nhật thông tin order by user ID: " + orderId);
+
+            // Update order
+            OrderResponse order = orderService.updateOrder(orderId, orderDTO);
+            return ResponseEntity.ok(order);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
 
     }
 
-    @DeleteMapping("/{id}")
-    public ResponseEntity<String> deleteOrder(@PathVariable Long id) {
-        // Xóa mềm => cập nhật active = false
-        return ResponseEntity.status(HttpStatus.OK).body("Product deleted with id:" + id);
+    @DeleteMapping("/{orderId}")
+    public ResponseEntity<String> deleteOrder(@PathVariable("orderId") Long orderId) throws DataNotFoundException {
+        // soft-delete => update active = false
+        orderService.deleteOrder(orderId);
+        return ResponseEntity.status(HttpStatus.OK).body("Order deleted with id:" + orderId);
     }
 }
