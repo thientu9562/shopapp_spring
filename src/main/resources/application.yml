@@ -21,6 +21,9 @@ spring:
 api:
   prefix: api/v1
 LegacyDatetimeCode: false
+jwt:
+  expiration: 259200 # 30days
+  secretKey: +oAE/EJ8bqERtsifFYrvuJdDag7USsLjiamwJ5MNZ3Y=
 #spring:
 #  datasource:
 #    driverClassName: com.mysql.jdbc.Driver
